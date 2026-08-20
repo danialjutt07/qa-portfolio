@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>StayEase — Hotel Booking (Demo)</title>
+<style>
+  :root {
+    --ink:#1a1f2b; --line:#d7dbe3; --accent:#0f766e; --accent-dark:#0b5c56;
+    --danger:#b3261e; --danger-bg:#fdecea; --success-bg:#e9f5ee; --mono:'Courier New',monospace;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#f4f6f7; color:var(--ink); font-family:'Segoe UI',Arial,sans-serif; padding:26px 14px 70px; }
+  .wrap { max-width:620px; margin:0 auto; }
+  header { display:flex; align-items:center; justify-content:space-between; background:var(--accent); color:#fff; border-radius:8px; padding:14px 20px; margin-bottom:18px; }
+  header h1 { font-size:19px; margin:0; }
+  header span { font-size:11px; font-family:var(--mono); }
+  .tabs { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+  .tab { padding:8px 14px; border-radius:18px; background:#fff; border:1px solid var(--line); font-size:12.5px; font-weight:600; cursor:pointer; color:#555; }
+  .tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .panel { display:none; }
+  .panel.active { display:block; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:6px; padding:18px 20px; margin-bottom:16px; }
+  .card h2 { font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:#555; margin:0 0 12px; border-bottom:1px solid var(--line); padding-bottom:7px; }
+  label { display:block; font-size:12.5px; font-weight:600; margin-top:12px; margin-bottom:5px; }
+  label:first-of-type { margin-top:0; }
+  .hint { font-size:11px; color:#777; font-weight:400; }
+  input, select { width:100%; padding:9px 11px; font-size:14px; border:1px solid #b8bec9; border-radius:4px; font-family:var(--mono); }
+  .row { display:flex; gap:10px; }
+  .row > div { flex:1; }
+  button { background:var(--accent); color:#fff; border:none; padding:10px 18px; border-radius:4px; font-size:13.5px; font-weight:600; cursor:pointer; margin-top:14px; }
+  button:hover { background:var(--accent-dark); }
+  .result { margin-top:12px; padding:10px 13px; border-radius:4px; font-size:13px; font-family:var(--mono); white-space:pre-wrap; border:1px solid var(--line); }
+  .result.ok { background:var(--success-bg); border-color:#9ecdb0; color:#205536; }
+  .result.fail { background:var(--danger-bg); border-color:#eab8b3; color:var(--danger); }
+  .result.idle { background:#f1f2f4; color:#666; }
+  .ref { font-size:11px; color:#666; background:#f1f2f4; padding:8px 10px; border-radius:4px; margin-top:8px; line-height:1.5; }
+  footer { text-align:center; font-size:11px; color:#999; margin-top:20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>StayEase — Hotel Booking (Demo)</h1><span id="clock"></span></header>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('search')">1. Search</div>
+    <div class="tab" onclick="showTab('booking')">2. Booking</div>
+    <div class="tab" onclick="showTab('payment')">3. Payment</div>
+    <div class="tab" onclick="showTab('account')">4. Account</div>
+  </div>
+
+  <!-- MODULE 1: SEARCH -->
+  <div id="search" class="panel active">
+    <div class="card">
+      <h2>Search & Availability</h2>
+      <label>Destination</label>
+      <input type="text" id="destination" placeholder="e.g. Lahore">
+      <div class="row">
+        <div><label>Check-in Date</label><input type="date" id="checkin"></div>
+        <div><label>Check-out Date</label><input type="date" id="checkout"></div>
+      </div>
+      <label>Guests <span class="hint">(allowed: 1–10)</span></label>
+      <input type="text" id="guests" placeholder="e.g. 2">
+      <button onclick="doSearch()">Search Hotels</button>
+      <div id="searchResult" class="result idle">No test run yet.</div>
+      <div class="ref">Known city with rooms: <b>Lahore</b>, <b>Karachi</b>, <b>Islamabad</b>. Any other valid city text → "no rooms available".</div>
+    </div>
+  </div>
+
+  <!-- MODULE 2: BOOKING -->
+  <div id="booking" class="panel">
+    <div class="card">
+      <h2>Booking & Reservation</h2>
+      <label>Room Type</label>
+      <select id="roomType">
+        <option value="deluxe">Deluxe Room (2 guests, 3 rooms left)</option>
+        <option value="suite">Executive Suite (4 guests, 1 room left)</option>
+        <option value="soldout">Presidential Suite (6 guests, 0 rooms left)</option>
+      </select>
+      <label>Guest Full Name</label>
+      <input type="text" id="guestName" placeholder="e.g. Ali Khan">
+      <label>Contact Number</label>
+      <input type="text" id="guestContact" placeholder="e.g. 03001234567">
+      <label>ID / Passport Number</label>
+      <input type="text" id="guestId" placeholder="e.g. 3520112345671">
+      <label>Number of Guests</label>
+      <input type="text" id="bookingGuests" placeholder="e.g. 2">
+      <button onclick="doBooking()">Confirm Booking</button>
+      <div id="bookingResult" class="result idle">No test run yet.</div>
+      <div class="ref">Presidential Suite is intentionally sold out (0 rooms) to test the double-booking / unavailable scenario.</div>
+    </div>
+  </div>
+
+  <!-- MODULE 3: PAYMENT -->
+  <div id="payment" class="panel">
+    <div class="card">
+      <h2>Payment & Checkout</h2>
+      <label>Card Number</label>
+      <input type="text" id="cardNumber" placeholder="e.g. 4111111111111111">
+      <div class="row">
+        <div><label>Expiry (MM/YY)</label><input type="text" id="cardExpiry" placeholder="e.g. 12/27"></div>
+        <div><label>CVV</label><input type="text" id="cardCvv" placeholder="e.g. 123"></div>
+      </div>
+      <label>Promo Code <span class="hint">(optional)</span></label>
+      <input type="text" id="promoCode" placeholder="e.g. STAY10">
+      <button onclick="doPayment()">Pay Now</button>
+      <div id="paymentResult" class="result idle">No test run yet.</div>
+      <div class="ref">Reference codes: <b>STAY10</b> — valid, min order $50. <b>EXPIRED20</b> — expired. Any other text → invalid code.</div>
+    </div>
+  </div>
+
+  <!-- MODULE 4: ACCOUNT -->
+  <div id="account" class="panel">
+    <div class="card">
+      <h2>Account & Booking Management</h2>
+      <label>Email</label>
+      <input type="text" id="accEmail" placeholder="e.g. ali@example.com">
+      <label>Password</label>
+      <input type="text" id="accPassword" placeholder="e.g. Secure123">
+      <div class="row">
+        <div><button onclick="doRegister()">Register</button></div>
+        <div><button onclick="doLogin()">Log In</button></div>
+      </div>
+      <div id="accountResult" class="result idle">No test run yet.</div>
+      <label style="margin-top:18px">Booking Reference <span class="hint">(for cancel/modify)</span></label>
+      <input type="text" id="bookingRef" placeholder="e.g. SE1001 (valid) or SE9999 (expired window)">
+      <div class="row">
+        <div><button onclick="doCancel()">Cancel Booking</button></div>
+        <div><button onclick="doModify()">Modify Dates</button></div>
+      </div>
+      <div id="manageResult" class="result idle">No test run yet.</div>
+      <div class="ref">Reference bookings: <b>SE1001</b> — active, within cancellation window. <b>SE9999</b> — past cancellation window. <b>SE0000</b> — already cancelled.</div>
+    </div>
+  </div>
+
+  <footer>Self-created demo hotel booking site for SQA practice — not a real service.<br>
+  Prepared by Muhammad Danial Arshad | Registration No: JUL26-SQ06-09</footer>
+</div>
+
+<script>
+document.getElementById('clock').textContent = new Date().toLocaleString();
+function showTab(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+function showResult(elId, ok, text) {
+  const el = document.getElementById(elId);
+  el.className = 'result ' + (ok ? 'ok' : 'fail');
+  el.textContent = text;
+}
+
+const KNOWN_CITIES = ['lahore', 'karachi', 'islamabad'];
+
+function doSearch() {
+  const dest = document.getElementById('destination').value.trim();
+  const checkin = document.getElementById('checkin').value;
+  const checkout = document.getElementById('checkout').value;
+  const guestsRaw = document.getElementById('guests').value.trim();
+
+  if (dest === '') { showResult('searchResult', false, 'ACTUAL RESULT: Rejected — Please enter a destination.'); return; }
+  if (!/^[a-zA-Z\s]+$/.test(dest)) { showResult('searchResult', false, 'ACTUAL RESULT: No results / invalid destination — "' + dest + '" contains unsupported characters.'); return; }
+
+  if (checkin && checkout) {
+    const ci = new Date(checkin), co = new Date(checkout);
+    const today = new Date(); today.setHours(0,0,0,0);
+    if (ci < today) { showResult('searchResult', false, 'ACTUAL RESULT: Rejected — Check-in date cannot be in the past.'); return; }
+    if (co <= ci) { showResult('searchResult', false, 'ACTUAL RESULT: Rejected — Check-out date must be after check-in date.'); return; }
+  }
+
+  if (guestsRaw !== '') {
+    const g = Number(guestsRaw);
+    if (!Number.isInteger(g)) { showResult('searchResult', false, 'ACTUAL RESULT: Rejected — Guests must be a whole number.'); return; }
+    if (g < 1) { showResult('searchResult', false, 'ACTUAL RESULT: Rejected — Guests must be at least 1.'); return; }
+    if (g > 10) { showResult('searchResult', false, 'ACTUAL RESULT: Rejected — Guests exceeds the maximum allowed (10).'); return; }
+  }
+
+  if (!KNOWN_CITIES.includes(dest.toLowerCase())) {
+    showResult('searchResult', true, 'ACTUAL RESULT: No rooms available for "' + dest + '".');
+    return;
+  }
+  showResult('searchResult', true, 'ACTUAL RESULT: Success — Hotels found in "' + dest + '". Showing available rooms.');
+}
+
+function doBooking() {
+  const room = document.getElementById('roomType').value;
+  const name = document.getElementById('guestName').value.trim();
+  const contact = document.getElementById('guestContact').value.trim();
+  const id = document.getElementById('guestId').value.trim();
+  const guestsRaw = document.getElementById('bookingGuests').value.trim();
+
+  if (room === 'soldout') { showResult('bookingResult', false, 'ACTUAL RESULT: Rejected — This room is no longer available for the selected dates.'); return; }
+  if (name === '') { showResult('bookingResult', false, 'ACTUAL RESULT: Rejected — Guest name is required.'); return; }
+  if (contact === '' || !/^[0-9+\-\s]{7,15}$/.test(contact)) { showResult('bookingResult', false, 'ACTUAL RESULT: Rejected — Contact number format is invalid.'); return; }
+  if (id === '' || !/^[a-zA-Z0-9]{5,20}$/.test(id)) { showResult('bookingResult', false, 'ACTUAL RESULT: Rejected — ID/Passport number format is invalid.'); return; }
+
+  const capacity = room === 'deluxe' ? 2 : 4;
+  if (guestsRaw !== '') {
+    const g = Number(guestsRaw);
+    if (Number.isInteger(g) && g > capacity) {
+      showResult('bookingResult', false, 'ACTUAL RESULT: Rejected — Guest count (' + g + ') exceeds room capacity (' + capacity + ').');
+      return;
+    }
+  }
+  showResult('bookingResult', true, 'ACTUAL RESULT: Success — Booking confirmed for "' + name + '". Proceed to payment.');
+}
+
+const PROMO = { 'STAY10': { expired:false, minOrder:50 }, 'EXPIRED20': { expired:true, minOrder:20 } };
+
+function doPayment() {
+  const num = document.getElementById('cardNumber').value.trim();
+  const expiry = document.getElementById('cardExpiry').value.trim();
+  const cvv = document.getElementById('cardCvv').value.trim();
+  const promo = document.getElementById('promoCode').value.trim().toUpperCase();
+
+  if (!/^\d{13,19}$/.test(num)) { showResult('paymentResult', false, 'ACTUAL RESULT: Rejected — Invalid card number.'); return; }
+  const m = expiry.match(/^(\d{2})\/(\d{2})$/);
+  if (!m) { showResult('paymentResult', false, 'ACTUAL RESULT: Rejected — Invalid expiry format (use MM/YY).'); return; }
+  const expMonth = parseInt(m[1], 10), expYear = 2000 + parseInt(m[2], 10);
+  const now = new Date();
+  const expDate = new Date(expYear, expMonth);
+  if (expDate < now) { showResult('paymentResult', false, 'ACTUAL RESULT: Rejected — Card has expired.'); return; }
+  if (!/^\d{3,4}$/.test(cvv)) { showResult('paymentResult', false, 'ACTUAL RESULT: Rejected — Invalid CVV.'); return; }
+
+  if (promo !== '') {
+    const entry = PROMO[promo];
+    if (!entry) { showResult('paymentResult', false, 'ACTUAL RESULT: Rejected — "' + promo + '" is not a valid promo code.'); return; }
+    if (entry.expired) { showResult('paymentResult', false, 'ACTUAL RESULT: Rejected — Promo code "' + promo + '" has expired.'); return; }
+  }
+  showResult('paymentResult', true, 'ACTUAL RESULT: Success — Payment approved. Booking confirmation and invoice generated.');
+}
+
+const ACCOUNTS = { 'ali@example.com': 'Secure123' };
+const BOOKINGS = { 'SE1001': 'active', 'SE9999': 'expired_window', 'SE0000': 'cancelled' };
+
+function doRegister() {
+  const email = document.getElementById('accEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('accPassword').value;
+  if (email === '' || pass === '') { showResult('accountResult', false, 'ACTUAL RESULT: Rejected — Email and password are required.'); return; }
+  if (ACCOUNTS[email]) { showResult('accountResult', false, 'ACTUAL RESULT: Rejected — This email is already registered.'); return; }
+  showResult('accountResult', true, 'ACTUAL RESULT: Success — Account created for "' + email + '". You are now logged in.');
+}
+function doLogin() {
+  const email = document.getElementById('accEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('accPassword').value;
+  if (!ACCOUNTS[email]) { showResult('accountResult', false, 'ACTUAL RESULT: Rejected — No account found for this email.'); return; }
+  if (ACCOUNTS[email] !== pass) { showResult('accountResult', false, 'ACTUAL RESULT: Rejected — Incorrect email or password.'); return; }
+  showResult('accountResult', true, 'ACTUAL RESULT: Success — Logged in as "' + email + '".');
+}
+function doCancel() {
+  const ref = document.getElementById('bookingRef').value.trim().toUpperCase();
+  const status = BOOKINGS[ref];
+  if (!status) { showResult('manageResult', false, 'ACTUAL RESULT: Rejected — Booking reference not found.'); return; }
+  if (status === 'cancelled') { showResult('manageResult', false, 'ACTUAL RESULT: Rejected — This booking has already been cancelled.'); return; }
+  if (status === 'expired_window') { showResult('manageResult', false, 'ACTUAL RESULT: Rejected — Cancellation window has passed for this booking.'); return; }
+  showResult('manageResult', true, 'ACTUAL RESULT: Success — Booking "' + ref + '" has been cancelled.');
+}
+function doModify() {
+  const ref = document.getElementById('bookingRef').value.trim().toUpperCase();
+  const status = BOOKINGS[ref];
+  if (!status) { showResult('manageResult', false, 'ACTUAL RESULT: Rejected — Booking reference not found.'); return; }
+  if (status === 'cancelled') { showResult('manageResult', false, 'ACTUAL RESULT: Rejected — Cancelled bookings cannot be modified.'); return; }
+  showResult('manageResult', true, 'ACTUAL RESULT: Success — Booking "' + ref + '" dates updated.');
+}
+</script>
+</body>
+</html>
