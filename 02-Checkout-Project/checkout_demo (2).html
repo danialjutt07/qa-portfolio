@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QA Demo Checkout — TechCart</title>
+<style>
+  :root {
+    --ink: #1a1f2b;
+    --paper: #eef2fb;
+    --line: #d7dbe3;
+    --accent: #7c3aed;
+    --accent-dark: #5b21b6;
+    --accent2: #06b6d4;
+    --danger: #dc2626;
+    --danger-bg: #fde8e8;
+    --success-bg: #e6f9f0;
+    --mono: 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: linear-gradient(160deg, #eef2fb 0%, #fdf2fa 100%);
+    color: var(--ink);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    padding: 32px 16px 80px;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    color: #fff;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 6px 16px rgba(124, 58, 237, 0.25);
+  }
+  header h1 { font-size: 22px; margin: 0; letter-spacing: 0.5px; color: #fff; }
+  header span { font-size: 12px; color: #f1eaff; font-family: var(--mono); }
+  .card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--accent);
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 10px rgba(30, 30, 60, 0.06);
+  }
+  .card h2 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent-dark);
+    margin: 0 0 14px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    margin-top: 14px;
+  }
+  label:first-of-type { margin-top: 0; }
+  .hint { font-size: 12px; color: #777; font-weight: 400; margin-top: 2px; }
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 15px;
+    border: 1px solid #b8bec9;
+    border-radius: 4px;
+    font-family: var(--mono);
+  }
+  input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .row { display: flex; gap: 14px; }
+  .row > div { flex: 1; }
+  button {
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    color: #fff;
+    border: none;
+    padding: 11px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 16px;
+    box-shadow: 0 3px 8px rgba(124, 58, 237, 0.3);
+  }
+  button:hover { filter: brightness(1.08); }
+  button.secondary {
+    background: #fff;
+    color: var(--accent-dark);
+    border: 1px solid var(--accent);
+  }
+  .result {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: var(--mono);
+    white-space: pre-wrap;
+    border: 1px solid var(--line);
+  }
+  .result.ok { background: var(--success-bg); border-color: #7bd7ab; color: #0f7a44; }
+  .result.fail { background: var(--danger-bg); border-color: #f0a8a8; color: var(--danger); }
+  .result.idle { background: #f1f2f4; color: #666; }
+  .codes-ref {
+    font-size: 12px;
+    color: #555;
+    background: #f4effe;
+    border: 1px dashed #c9aef2;
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+    line-height: 1.6;
+  }
+  .codes-ref b { color: var(--accent-dark); font-family: var(--mono); }
+  footer {
+    text-align: center;
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 24px;
+    padding: 14px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+  }
+  footer b { color: var(--accent-dark); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>TechCart — Checkout (Demo)</h1>
+    <span id="clock"></span>
+  </header>
+
+  <div class="card">
+    <h2>Order Details</h2>
+    <div class="row">
+      <div>
+        <label for="product">Product</label>
+        <input type="text" id="product" value="Wireless Mouse" readonly>
+      </div>
+      <div>
+        <label for="quantity">Quantity <span class="hint">(allowed: 1–10)</span></label>
+        <input type="number" id="quantity" placeholder="e.g. 2">
+      </div>
+    </div>
+    <button onclick="checkQuantity()">Validate Quantity</button>
+    <div id="qtyResult" class="result idle">No test run yet.</div>
+  </div>
+
+  <div class="card">
+    <h2>Payment</h2>
+    <label for="amount">Payment Amount ($) <span class="hint">(allowed: $1.00 – $10,000.00)</span></label>
+    <input type="text" id="amount" placeholder="e.g. 250">
+    <button onclick="checkAmount()">Validate Payment Amount</button>
+    <div id="amtResult" class="result idle">No test run yet.</div>
+  </div>
+
+  <div class="card">
+    <h2>Discount Code</h2>
+    <label for="code">Enter Code</label>
+    <input type="text" id="code" placeholder="e.g. SAVE10">
+    <button onclick="checkDiscount()">Apply Discount</button>
+    <div id="codeResult" class="result idle">No test run yet.</div>
+    <div class="codes-ref">
+      Reference codes for testing (fictional):<br>
+      <b>SAVE10</b> — valid, not expired, min order $50, not used<br>
+      <b>EXPIRED5</b> — valid but expired, min order $20<br>
+      <b>BIGORDER20</b> — valid, min order $500<br>
+      <b>USEDCODE15</b> — valid, not expired, min order $30, already used<br>
+      Any other text — treated as an invalid / non-existent code
+    </div>
+  </div>
+
+  <footer>Self-created demo checkout form for SQA practice — not a real store.<br>
+    Prepared by <b>Muhammad Danial Arshad</b> &nbsp;|&nbsp; Registration No: <b>JUL26-SQ06-09</b>
+  </footer>
+</div>
+
+<script>
+document.getElementById('clock').textContent = new Date().toLocaleString();
+
+function showResult(elId, ok, text) {
+  const el = document.getElementById(elId);
+  el.className = 'result ' + (ok ? 'ok' : 'fail');
+  el.textContent = text;
+}
+
+function checkQuantity() {
+  const raw = document.getElementById('quantity').value.trim();
+  if (raw === '') { showResult('qtyResult', false, 'ACTUAL RESULT: Rejected — Quantity is required.'); return; }
+  const n = Number(raw);
+  if (!Number.isInteger(n)) { showResult('qtyResult', false, 'ACTUAL RESULT: Rejected — Quantity must be a whole number.'); return; }
+  if (n < 1) { showResult('qtyResult', false, 'ACTUAL RESULT: Rejected — Quantity ' + n + ' is below the minimum allowed (1).'); return; }
+  if (n > 10) { showResult('qtyResult', false, 'ACTUAL RESULT: Rejected — Quantity ' + n + ' exceeds the maximum allowed (10).'); return; }
+  showResult('qtyResult', true, 'ACTUAL RESULT: Accepted — Quantity ' + n + ' is within the valid range (1–10).');
+}
+
+function checkAmount() {
+  const raw = document.getElementById('amount').value.trim();
+  if (raw === '') { showResult('amtResult', false, 'ACTUAL RESULT: Rejected — Payment amount is required (blank input).'); return; }
+  const n = Number(raw);
+  if (Number.isNaN(n)) { showResult('amtResult', false, 'ACTUAL RESULT: Rejected — "' + raw + '" is not a valid number.'); return; }
+  if (n < 0) { showResult('amtResult', false, 'ACTUAL RESULT: Rejected — Payment amount cannot be negative ($' + n + ').'); return; }
+  if (n === 0) { showResult('amtResult', false, 'ACTUAL RESULT: Rejected — Payment amount must be greater than zero.'); return; }
+  if (n > 10000) { showResult('amtResult', false, 'ACTUAL RESULT: Rejected — Payment amount exceeds the maximum allowed limit of $10,000.00.'); return; }
+  showResult('amtResult', true, 'ACTUAL RESULT: Accepted — Payment amount $' + n.toFixed(2) + ' is within the valid range.');
+}
+
+const CODES = {
+  'SAVE10':      { expired: false, minOrder: 50,  used: false },
+  'EXPIRED5':    { expired: true,  minOrder: 20,  used: false },
+  'BIGORDER20':  { expired: false, minOrder: 500, used: false },
+  'USEDCODE15':  { expired: false, minOrder: 30,  used: true  },
+};
+
+function checkDiscount() {
+  const code = document.getElementById('code').value.trim().toUpperCase();
+  const amount = Number(document.getElementById('amount').value.trim());
+  const orderValue = Number.isFinite(amount) ? amount : 0;
+
+  const entry = CODES[code];
+  if (!entry) {
+    showResult('codeResult', false, 'ACTUAL RESULT: Rejected — "' + code + '" is not a valid discount code.');
+    return;
+  }
+  if (entry.expired) {
+    showResult('codeResult', false, 'ACTUAL RESULT: Rejected — Code "' + code + '" has expired.');
+    return;
+  }
+  if (entry.used) {
+    showResult('codeResult', false, 'ACTUAL RESULT: Rejected — Code "' + code + '" has already been used.');
+    return;
+  }
+  if (orderValue < entry.minOrder) {
+    showResult('codeResult', false, 'ACTUAL RESULT: Rejected — Order value $' + orderValue.toFixed(2) + ' is below the minimum required ($' + entry.minOrder.toFixed(2) + ') for this code. (Enter a Payment Amount above first.)');
+    return;
+  }
+  showResult('codeResult', true, 'ACTUAL RESULT: Accepted — Discount code "' + code + '" applied successfully.');
+}
+</script>
+</body>
+</html>
