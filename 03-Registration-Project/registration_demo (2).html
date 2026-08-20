@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QA Demo — Registration Form</title>
+<style>
+  :root {
+    --ink: #1a1f2b; --paper: #f7f8fa; --line: #d7dbe3;
+    --accent: #2f6f4f; --accent-dark: #24563d;
+    --danger: #b3261e; --danger-bg: #fdecea; --success-bg: #e9f5ee;
+    --mono: 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:'Segoe UI',Arial,sans-serif; padding:32px 16px 80px; }
+  .wrap { max-width:560px; margin:0 auto; }
+  header { display:flex; align-items:baseline; justify-content:space-between; border-bottom:3px solid var(--ink); padding-bottom:12px; margin-bottom:24px; }
+  header h1 { font-size:20px; margin:0; }
+  header span { font-size:12px; color:#666; font-family:var(--mono); }
+  .card { background:#fff; border:1px solid var(--line); border-radius:6px; padding:20px 22px; margin-bottom:18px; }
+  .card h2 { font-size:14px; text-transform:uppercase; letter-spacing:.06em; color:#555; margin:0 0 14px; border-bottom:1px solid var(--line); padding-bottom:8px; }
+  label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; margin-top:14px; }
+  label:first-of-type { margin-top:0; }
+  .hint { font-size:12px; color:#777; font-weight:400; margin-top:2px; }
+  input { width:100%; padding:10px 12px; font-size:15px; border:1px solid #b8bec9; border-radius:4px; font-family:var(--mono); }
+  input:focus { outline:2px solid var(--accent); outline-offset:1px; }
+  button { background:var(--accent); color:#fff; border:none; padding:11px 20px; border-radius:4px; font-size:14px; font-weight:600; cursor:pointer; margin-top:18px; }
+  button:hover { background:var(--accent-dark); }
+  .result { margin-top:16px; padding:12px 14px; border-radius:4px; font-size:14px; font-family:var(--mono); white-space:pre-wrap; border:1px solid var(--line); }
+  .result.ok { background:var(--success-bg); border-color:#9ecdb0; color:#205536; }
+  .result.fail { background:var(--danger-bg); border-color:#eab8b3; color:var(--danger); }
+  .result.idle { background:#f1f2f4; color:#666; }
+  footer { text-align:center; font-size:12px; color:#999; margin-top:24px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>QA Demo — User Registration</h1>
+    <span id="clock"></span>
+  </header>
+
+  <div class="card">
+    <h2>Create Account</h2>
+
+    <label for="name">Full Name</label>
+    <input type="text" id="name" placeholder="e.g. Ali Khan">
+
+    <label for="email">Email Address</label>
+    <input type="text" id="email" placeholder="e.g. ali@example.com">
+
+    <label for="age">Age <span class="hint">(allowed: 18–100)</span></label>
+    <input type="text" id="age" placeholder="e.g. 25">
+
+    <label for="password">Password <span class="hint">(minimum 8 characters)</span></label>
+    <input type="text" id="password" placeholder="e.g. Secure123">
+
+    <label for="confirm">Confirm Password</label>
+    <input type="text" id="confirm" placeholder="Re-enter password">
+
+    <button onclick="doRegister()">Register</button>
+    <div id="result" class="result idle">No test run yet.</div>
+  </div>
+
+  <footer>Self-created demo registration form for SQA practice — not a real service.<br>
+  Prepared by Muhammad Danial Arshad | Registration No: JUL26-SQ06-09</footer>
+</div>
+
+<script>
+document.getElementById('clock').textContent = new Date().toLocaleString();
+
+function showResult(ok, text) {
+  const el = document.getElementById('result');
+  el.className = 'result ' + (ok ? 'ok' : 'fail');
+  el.textContent = text;
+}
+
+function doRegister() {
+  const name = document.getElementById('name').value;
+  const email = document.getElementById('email').value.trim();
+  const ageRaw = document.getElementById('age').value.trim();
+  const password = document.getElementById('password').value;
+  const confirm = document.getElementById('confirm').value;
+
+  // Name validation
+  if (name.trim() === '') {
+    showResult(false, 'ACTUAL RESULT: Rejected — Full name is required.');
+    return;
+  }
+  if (name.trim().length < 2) {
+    showResult(false, 'ACTUAL RESULT: Rejected — Full name must be at least 2 characters.');
+    return;
+  }
+
+  // Email validation (simple pattern)
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+  if (email === '') {
+    showResult(false, 'ACTUAL RESULT: Rejected — Email address is required.');
+    return;
+  }
+  if (!emailPattern.test(email)) {
+    showResult(false, 'ACTUAL RESULT: Rejected — "' + email + '" is not a valid email address.');
+    return;
+  }
+
+  // Age validation
+  if (ageRaw === '') {
+    showResult(false, 'ACTUAL RESULT: Rejected — Age is required.');
+    return;
+  }
+  const age = Number(ageRaw);
+  if (!Number.isInteger(age)) {
+    showResult(false, 'ACTUAL RESULT: Rejected — Age must be a whole number.');
+    return;
+  }
+  if (age < 18) {
+    showResult(false, 'ACTUAL RESULT: Rejected — Age ' + age + ' is below the minimum allowed (18). You must be 18 or older to register.');
+    return;
+  }
+  if (age > 100) {
+    showResult(false, 'ACTUAL RESULT: Rejected — Age ' + age + ' exceeds the maximum allowed (100).');
+    return;
+  }
+
+  // Password validation
+  if (password === '') {
+    showResult(false, 'ACTUAL RESULT: Rejected — Password is required.');
+    return;
+  }
+  if (password.length < 8) {
+    showResult(false, 'ACTUAL RESULT: Rejected — Password must be at least 8 characters (entered: ' + password.length + ').');
+    return;
+  }
+
+  // Confirm password validation
+  if (confirm === '') {
+    showResult(false, 'ACTUAL RESULT: Rejected — Please confirm your password.');
+    return;
+  }
+  if (confirm !== password) {
+    showResult(false, 'ACTUAL RESULT: Rejected — Password and Confirm Password do not match.');
+    return;
+  }
+
+  showResult(true, 'ACTUAL RESULT: Success — Account created for "' + name.trim() + '" (' + email + '). Registration complete.');
+}
+</script>
+</body>
+</html>
